@@ -27,7 +27,10 @@ def crear_refugio(Espacio):
 
 Refugio = crear_refugio(Espacio)
 
-def resolver(x, y, pasos, Refugio, tamano, max_pasos, memo):
+def resolver(x, y, pasos, Refugio, tamano, max_pasos, memo, visitados=None):
+    # Inicializar el conjunto de visitados si es la primera llamada
+    if visitados is None:
+        visitados = set()
     # Si está fuera del refugio, no es válido
     if x < 0 or x >= tamano or y < 0 or y >= tamano:
         return None
@@ -36,6 +39,9 @@ def resolver(x, y, pasos, Refugio, tamano, max_pasos, memo):
         return None
     # Si se exceden los pasos máximos, no es válido
     if pasos > max_pasos:
+        return None
+    # Si ya visitamos esta celda en este camino, evitar ciclos
+    if (x, y) in visitados:
         return None
     # Si llegó a la meta, cuenta la cápsula si hay
     if (x, y) == (tamano-1, tamano-1):
@@ -49,14 +55,17 @@ def resolver(x, y, pasos, Refugio, tamano, max_pasos, memo):
     if memo[x][y][pasos] is not None:
         return memo[x][y][pasos]
 
+    # Marcar la celda como visitada en este camino
+    visitados.add((x, y))
     # Probar moverse en las 4 direcciones
     direcciones = [(-1,0), (1,0), (0,-1), (0,1)]
     mejores = []
     for mov_x, mov_y in direcciones:
         nuevo_x, nuevo_y = x + mov_x, y + mov_y
-        resultado = resolver(nuevo_x, nuevo_y, pasos+1, Refugio, tamano, max_pasos, memo)
+        resultado = resolver(nuevo_x, nuevo_y, pasos+1, Refugio, tamano, max_pasos, memo, visitados.copy())
         if resultado is not None:
             mejores.append(resultado)
+    # Desmarcar la celda (no necesario por el uso de copy, pero por claridad)
     # Si no hay caminos válidos desde aquí, guardar y retornar None
     if not mejores:
         memo[x][y][pasos] = None
