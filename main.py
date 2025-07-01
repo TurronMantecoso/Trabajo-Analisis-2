@@ -1,12 +1,13 @@
 import random
 import numpy as np
 import copy
+import hashlib
 
-#Se declaran 
+ 
 posibles_casos = ["💣","🔳","💊"]
-#posibles_casos = [".","B","R"]
+#posibles_casos = ["." ,"B" ,"R"]
 
-Espacio = 10
+Espacio = 20
 
 Refugio = np.empty((Espacio, Espacio), dtype=object)
 
@@ -27,7 +28,7 @@ def crear_refugio(Espacio):
 
 Refugio = crear_refugio(Espacio)
 
-def resolver(x, y, pasos, Refugio, tamano, max_pasos, memo, visitados=None):
+def resolver_array(x, y, pasos, Refugio, tamano, max_pasos, memo, visitados=None):
     # Inicializar el conjunto de visitados si es la primera llamada
     if visitados is None:
         visitados = set()
@@ -62,7 +63,7 @@ def resolver(x, y, pasos, Refugio, tamano, max_pasos, memo, visitados=None):
     mejores = []
     for mov_x, mov_y in direcciones:
         nuevo_x, nuevo_y = x + mov_x, y + mov_y
-        resultado = resolver(nuevo_x, nuevo_y, pasos+1, Refugio, tamano, max_pasos, memo, visitados.copy())
+        resultado = resolver_array(nuevo_x, nuevo_y, pasos+1, Refugio, tamano, max_pasos, memo, visitados.copy())
         if resultado is not None:
             mejores.append(resultado)
     # Desmarcar la celda (no necesario por el uso de copy, pero por claridad)
@@ -78,15 +79,80 @@ def resolver(x, y, pasos, Refugio, tamano, max_pasos, memo, visitados=None):
     memo[x][y][pasos] = mejor_cantidad
     return mejor_cantidad
 
+def resolver_diccionario(x, y, pasos, Refugio, tamano, max_pasos, memo, visitados=None):
+    
+    if visitados is None:
+        visitados = set()
+    
+    if x < 0 or x >= tamano or y < 0 or y >= tamano:
+        return None
+    
+    if Refugio[x][y] == "💣":
+        return None
+    
+    if pasos > max_pasos:
+        return None
+    
+    if (x, y) in visitados:
+        return None
+    
+    if (x, y) == (tamano-1, tamano-1):
+        
+        if Refugio[x][y] == "💊":
+            return 1 
+        else:
+            return 0  
+
+    # Memo
+    clave = (x,y,pasos)
+    if clave in memo:
+        #debo usar la clave para buscar dentro del memo
+        return memo[clave]
+
+   
+    visitados.add((x, y))
+    
+    direcciones = [(-1,0), (1,0), (0,-1), (0,1)]
+    mejores = []
+    for mov_x, mov_y in direcciones:
+        nuevo_x, nuevo_y = x + mov_x, y + mov_y
+        resultado = resolver_diccionario(nuevo_x, nuevo_y, pasos+1, Refugio, tamano, max_pasos, memo, visitados.copy())
+        if resultado is not None:
+            mejores.append(resultado)
+
+    #se compara memo directamente, ya que este es una clave 
+    if not mejores:
+        memo == None
+        return None
+
+    mejor_cantidad = max(mejores)
+   
+    if Refugio[x][y] == "💊":
+        mejor_cantidad += 1
+    #se compara memo directamente, ya que este es una clave 
+    memo == mejor_cantidad
+    return mejor_cantidad
+
 def resolucion_array(Refugio):
     tamano = len(Refugio)
     print(f"Tamaño del Refugio: {tamano}")
-    max_pasos = 2 * tamano - 2  # Máximo de pasos permitidos para llegar a la meta
+    max_pasos = 2 * tamano - 1  # Máximo de pasos permitidos para llegar a la meta
     memo = np.full((tamano, tamano, max_pasos + 1), None, dtype=object)
-    resultado = resolver(0, 0, 0, Refugio, tamano, max_pasos, memo)
+    resultado = resolver_array(0, 0, 0, Refugio, tamano, max_pasos, memo)
     return resultado
 
-resultado = resolucion_array(Refugio)
+def resolucion_diccionario(Refugio):
+    tamano = len(Refugio)
+    max_pasos = 2 * tamano - 1  
+    # memo pasa a ser un diccionario y no un array 
+    memo = dict()
+    resultado = resolver_diccionario(0, 0, 0, Refugio, tamano, max_pasos, memo)
+    return resultado
+
+resultado  = resolucion_array(Refugio)
+
+resultado_diccionario = resolucion_diccionario(Refugio)
+
 print("Refugio:")
 for fila in Refugio:
     print(' '.join(fila))
@@ -95,3 +161,10 @@ if resultado is None:
     print("\nNo hay camino posible para recolectar cápsulas.")
 else:
     print(f"\nMáximo de cápsulas recolectables: {resultado}")
+
+if resultado_diccionario is None:
+    print("\nNo hay camino posible para recolectar cápsulas.")
+else:
+    print(f"\nMáximo de cápsulas recolectables (diccionario): {resultado_diccionario}")
+
+
