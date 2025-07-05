@@ -148,31 +148,47 @@ def main():
     tamanos = []
     resultados = []
     tiempos = []
-    for n in range(10, 50, 10):  # Incrementa de 10 en 10 hasta 100
+    memorias = []
+    print(f"{'n':>4} | {'Cápsulas':>10} | {'Tiempo (s)':>10} | {'Memoria (MB)':>13} | {'% Bombas':>9} | {'% Cápsulas':>10}")
+    print('-'*75)
+    for n in range(10, 50, 10):  # Incrementa de 10 en 10 hasta 50
         Refugio = crear_refugio(n)
         mostrar_refugio(Refugio)
+        # Calcular % bombas y % cápsulas
+        total = n * n
+        bombas = np.sum(Refugio == '💣')
+        capsulas = np.sum(Refugio == '💊')
+        pct_bombas = 100 * bombas / total
+        pct_capsulas = 100 * capsulas / total
+        import tracemalloc
+        tracemalloc.start()
         inicio = process_time()
         try:
             resultado = resolucion_array(Refugio)
             fin = process_time()
             tiempo = fin - inicio
-            print(f"Tamaño: {n}x{n}")
-            print(f"Resultado (solo array): {resultado}")
-            print(f"Tiempo de ejecución: {tiempo:.2f} segundos\n")
+            mem = tracemalloc.get_traced_memory()[1] / (1024*1024)
+            tracemalloc.stop()
+            if resultado == -float('inf'):
+                res_str = "No posible"
+            else:
+                res_str = str(resultado)
+            print(f"{n:>4} | {res_str:>10} | {tiempo:10.4f} | {mem:13.2f} | {pct_bombas:9.2f} | {pct_capsulas:10.2f}")
             tamanos.append(n)
             resultados.append(resultado)
             tiempos.append(tiempo)
+            memorias.append(mem)
             if tiempo > limite_tiempo:
                 print(f"Tiempo excedido para n={n} (>{limite_tiempo}s). Se detiene la prueba.")
                 break
         except Exception as e:
-            print(f"Error o memoria insuficiente para n={n}: {e}")
+            tracemalloc.stop()
+            print(f"No se pudo calcular el valor para n={n}: {e}")
             break
 
     # Graficar tiempo de ejecución vs tamaño n (X=n, Y=tiempo de ejecución real)
     plt.figure(figsize=(8, 5))
     plt.plot(tamanos, tiempos, marker='o', linestyle='-', color='blue', label='Tiempo de ejecución')
-    # Mostrar los valores de tiempo exactos sobre cada punto
     for x, y in zip(tamanos, tiempos):
         plt.text(x, y, f"{y:.2f}", fontsize=8, ha='center', va='bottom')
     plt.xlabel('Valor de N')
