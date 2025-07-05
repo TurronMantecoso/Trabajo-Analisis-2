@@ -141,8 +141,7 @@ def resolucion_diccionario(Refugio):
     return resultado
 
 
-
-def main():
+if __name__ == "__main__":
     """
     Ejecuta pruebas incrementando el tamaño del refugio y muestra resultados usando memoización con diccionario.
     Detiene la prueba si el tiempo por instancia excede el límite o si hay error/memoria insuficiente.
@@ -156,9 +155,10 @@ def main():
     memorias_dicc = []
     print(f"{'n':>4} | {'Cápsulas':>10} | {'Tiempo (s)':>10} | {'Memoria (MB)':>13} | {'% Bombas':>9} | {'% Cápsulas':>10}")
     print('-'*75)
-    for n in range(10, 50, 10):  # Incrementa de 10 en 10 hasta 50
+    memoria_comparada = []
+    for n in [10,20,30,40]:  # Incrementa de 10 en 10 hasta 50
         Refugio = crear_refugio(n)
-        mostrar_refugio(Refugio)
+        #mostrar_refugio(Refugio)
         # Calcular % bombas y % cápsulas
         total = n * n
         bombas = np.sum(Refugio == '💣')
@@ -203,6 +203,7 @@ def main():
             memorias.append(mem)
             tiempos_dicc.append(tiempo_dicc)
             memorias_dicc.append(mem_dicc)
+            memoria_comparada.append((n, mem, mem_dicc))
             if tiempo > limite_tiempo:
                 print(f"Tiempo excedido para n={n} (>{limite_tiempo}s). Se detiene la prueba.")
                 break
@@ -244,5 +245,5 @@ def main():
     fig.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.show()
 
-if __name__ == "__main__":
-    main()
+    # Hacer memoria_comparada global para Spyder
+    globals()['memoria_comparada'] = memoria_comparada
