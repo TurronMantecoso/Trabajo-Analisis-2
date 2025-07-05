@@ -17,13 +17,16 @@ def crear_refugio(Espacio):
     Refugio = np.empty((Espacio, Espacio), dtype=object)
     for i in range(Espacio):
         for j in range(Espacio):
-            r = random.uniform(0, 1)
-            if r < 0.2:
-                Refugio[i][j] = "💣"  # Bomba
-            elif r < 0.3:
-                Refugio[i][j] = "💊"  # Cápsula
+            if (i == 0 and j == 0) or (i == Espacio - 1 and j == Espacio - 1):
+                Refugio[i][j] = "⬜"  # Esquinas siempre vacías
             else:
-                Refugio[i][j] = "⬜"  # Espacio vacío
+                r = random.uniform(0, 1)
+                if r < 0.2:
+                    Refugio[i][j] = "💣"  # Bomba
+                elif r < 0.3:
+                    Refugio[i][j] = "💊"  # Cápsula
+                else:
+                    Refugio[i][j] = "⬜"  # Espacio vacío
     return Refugio
 
 def mostrar_refugio(Refugio):
@@ -149,6 +152,8 @@ def main():
     resultados = []
     tiempos = []
     memorias = []
+    tiempos_dicc = []
+    memorias_dicc = []
     print(f"{'n':>4} | {'Cápsulas':>10} | {'Tiempo (s)':>10} | {'Memoria (MB)':>13} | {'% Bombas':>9} | {'% Cápsulas':>10}")
     print('-'*75)
     for n in range(10, 50, 10):  # Incrementa de 10 en 10 hasta 50
@@ -161,6 +166,7 @@ def main():
         pct_bombas = 100 * bombas / total
         pct_capsulas = 100 * capsulas / total
         import tracemalloc
+        # Medición de memoria y tiempo para array
         tracemalloc.start()
         inicio = process_time()
         try:
@@ -169,15 +175,34 @@ def main():
             tiempo = fin - inicio
             mem = tracemalloc.get_traced_memory()[1] / (1024*1024)
             tracemalloc.stop()
+            # Medición de memoria y tiempo para diccionario
+            tracemalloc.start()
+            inicio2 = process_time()
+            resultado_dicc = resolucion_diccionario(Refugio)
+            fin2 = process_time()
+            tiempo_dicc = fin2 - inicio2
+            mem_dicc = tracemalloc.get_traced_memory()[1] / (1024*1024)
+            tracemalloc.stop()
             if resultado == -float('inf'):
                 res_str = "No posible"
             else:
                 res_str = str(resultado)
+            if resultado_dicc == -float('inf'):
+                res_dicc_str = "No posible"
+            else:
+                res_dicc_str = str(resultado_dicc)
             print(f"{n:>4} | {res_str:>10} | {tiempo:10.4f} | {mem:13.2f} | {pct_bombas:9.2f} | {pct_capsulas:10.2f}")
+            print("\nTabla de memoria y tiempo para n={}:".format(n))
+            print(f"{'Método':<18} | {'Cápsulas':>10} | {'Tiempo (s)':>10} | {'Memoria (MB)':>13}")
+            print('-'*60)
+            print(f"{'Array tridimensional':<18} | {res_str:>10} | {tiempo:10.4f} | {mem:13.2f}")
+            print(f"{'Diccionario hash':<18} | {res_dicc_str:>10} | {tiempo_dicc:10.4f} | {mem_dicc:13.2f}")
             tamanos.append(n)
             resultados.append(resultado)
             tiempos.append(tiempo)
             memorias.append(mem)
+            tiempos_dicc.append(tiempo_dicc)
+            memorias_dicc.append(mem_dicc)
             if tiempo > limite_tiempo:
                 print(f"Tiempo excedido para n={n} (>{limite_tiempo}s). Se detiene la prueba.")
                 break
@@ -186,17 +211,37 @@ def main():
             print(f"No se pudo calcular el valor para n={n}: {e}")
             break
 
-    # Graficar tiempo de ejecución vs tamaño n (X=n, Y=tiempo de ejecución real)
-    plt.figure(figsize=(8, 5))
-    plt.plot(tamanos, tiempos, marker='o', linestyle='-', color='blue', label='Tiempo de ejecución')
+    # Graficar tiempo de ejecución y memoria vs tamaño n para ambos métodos
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+    # Tiempo
+    ax1.plot(tamanos, tiempos, marker='o', linestyle='-', color='tab:blue', label='Array tridimensional')
+    ax1.plot(tamanos, tiempos_dicc, marker='s', linestyle='--', color='tab:orange', label='Diccionario hash')
     for x, y in zip(tamanos, tiempos):
-        plt.text(x, y, f"{y:.2f}", fontsize=8, ha='center', va='bottom')
-    plt.xlabel('Valor de N')
-    plt.ylabel('Tiempo de ejecución (segundos)')
-    plt.title('Tiempo de ejecución vs Valor de N')
-    plt.grid(True, which='both', axis='y', linestyle='--', alpha=0.7)
-    plt.legend()
-    plt.tight_layout()
+        ax1.text(x, y, f"{y:.2f}", fontsize=8, ha='center', va='bottom', color='tab:blue')
+    for x, y in zip(tamanos, tiempos_dicc):
+        ax1.text(x, y, f"{y:.2f}", fontsize=8, ha='center', va='top', color='tab:orange')
+    ax1.set_xlabel('Valor de N')
+    ax1.set_ylabel('Tiempo de ejecución (segundos)')
+    ax1.set_title('Tiempo de ejecución vs Valor de N')
+    ax1.grid(True, which='both', axis='y', linestyle='--', alpha=0.7)
+    ax1.legend()
+
+    # Memoria
+    ax2.plot(tamanos, memorias, marker='o', linestyle='-', color='tab:blue', label='Array tridimensional')
+    ax2.plot(tamanos, memorias_dicc, marker='s', linestyle='--', color='tab:orange', label='Diccionario hash')
+    for x, y in zip(tamanos, memorias):
+        ax2.text(x, y, f"{y:.2f}", fontsize=8, ha='center', va='bottom', color='tab:blue')
+    for x, y in zip(tamanos, memorias_dicc):
+        ax2.text(x, y, f"{y:.2f}", fontsize=8, ha='center', va='top', color='tab:orange')
+    ax2.set_xlabel('Valor de N')
+    ax2.set_ylabel('Memoria pico (MB)')
+    ax2.set_title('Memoria pico vs Valor de N')
+    ax2.grid(True, which='both', axis='y', linestyle='--', alpha=0.7)
+    ax2.legend()
+
+    fig.suptitle('Comparación de tiempo y memoria entre métodos')
+    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.show()
 
 if __name__ == "__main__":
