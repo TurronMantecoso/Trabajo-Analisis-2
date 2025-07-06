@@ -4,7 +4,7 @@ from time import process_time
 import matplotlib.pyplot as plt
 
 # Elementos del refugio
-posibles_casos = ["B",".","R"]  # B=Bomba, .=Espacio vacío, R=cápsula de Remedio
+#posibles_casos = ["B",".","R"]  # B=Bomba, .=Espacio vacío, R=cápsula de Remedio
 
 def crear_refugio(Espacio):
     """
