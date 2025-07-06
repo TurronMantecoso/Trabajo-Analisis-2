@@ -65,10 +65,12 @@ def resolver(x, y, pasos, Refugio, tamano, max_pasos, memo):
         memo[x][y][pasos] = 1 if Refugio[x][y] == "💊" else 0
         return memo[x][y][pasos]
     valor = 1 if Refugio[x][y] == "💊" else 0
-    # Calcula el mejor resultado moviéndose derecha o abajo
+    # Calcula el mejor resultado moviéndose en las 4 direcciones: abajo, derecha, arriba, izquierda
     mejor = max(
-        resolver(x + 1, y, pasos + 1, Refugio, tamano, max_pasos, memo),
-        resolver(x, y + 1, pasos + 1, Refugio, tamano, max_pasos, memo)
+        resolver(x + 1, y, pasos + 1, Refugio, tamano, max_pasos, memo),  # abajo
+        resolver(x, y + 1, pasos + 1, Refugio, tamano, max_pasos, memo),  # derecha
+        resolver(x - 1, y, pasos + 1, Refugio, tamano, max_pasos, memo),  # arriba
+        resolver(x, y - 1, pasos + 1, Refugio, tamano, max_pasos, memo)   # izquierda
     )
     memo[x][y][pasos] = valor + mejor
     return memo[x][y][pasos]
@@ -118,10 +120,12 @@ def resolver_diccionario(x, y, pasos, Refugio, tamano, max_pasos, memo):
         memo[key] = 1 if Refugio[x][y] == "💊" else 0
         return memo[key]
     valor = 1 if Refugio[x][y] == "💊" else 0
-    # Calcula el mejor resultado moviéndose derecha o abajo
+    # Calcula el mejor resultado moviéndose en las 4 direcciones: abajo, derecha, arriba, izquierda
     mejor = max(
-        resolver_diccionario(x + 1, y, pasos + 1, Refugio, tamano, max_pasos, memo),
-        resolver_diccionario(x, y + 1, pasos + 1, Refugio, tamano, max_pasos, memo)
+        resolver_diccionario(x + 1, y, pasos + 1, Refugio, tamano, max_pasos, memo),  # abajo
+        resolver_diccionario(x, y + 1, pasos + 1, Refugio, tamano, max_pasos, memo),  # derecha
+        resolver_diccionario(x - 1, y, pasos + 1, Refugio, tamano, max_pasos, memo),  # arriba
+        resolver_diccionario(x, y - 1, pasos + 1, Refugio, tamano, max_pasos, memo)   # izquierda
     )
     memo[key] = valor + mejor
     return memo[key]
@@ -156,7 +160,7 @@ if __name__ == "__main__":
     print(f"{'n':>4} | {'Cápsulas':>10} | {'Tiempo (s)':>10} | {'Memoria (MB)':>13} | {'% Bombas':>9} | {'% Cápsulas':>10}")
     print('-'*75)
     memoria_comparada = []
-    for n in [10,20,30,40]:  # Incrementa de 10 en 10 hasta 50
+    for n in [10,20,30,40]:  # Incrementa de 10 en 10 hasta 40
         Refugio = crear_refugio(n)
         #mostrar_refugio(Refugio)
         # Calcular % bombas y % cápsulas
